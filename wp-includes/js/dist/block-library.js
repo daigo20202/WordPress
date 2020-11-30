@@ -3967,16 +3967,42 @@ function (_super) {
       _this.props.onZoomChange(newZoom);
     };
 
-    _this.emitCropData = function () {
-      if (!_this.state.cropSize) return; // this is to ensure the crop is correctly restricted after a zoom back (https://github.com/ricardo-ch/react-easy-crop/issues/6)
+    _this.getCropData = function () {
+      if (!_this.state.cropSize) {
+        return null;
+      } // this is to ensure the crop is correctly restricted after a zoom back (https://github.com/ricardo-ch/react-easy-crop/issues/6)
+
 
       var restrictedPosition = _this.props.restrictPosition ? index_module_restrictPosition(_this.props.crop, _this.mediaSize, _this.state.cropSize, _this.props.zoom, _this.props.rotation) : _this.props.crop;
+      return computeCroppedArea(restrictedPosition, _this.mediaSize, _this.state.cropSize, _this.getAspect(), _this.props.zoom, _this.props.rotation, _this.props.restrictPosition);
+    };
 
-      var _a = computeCroppedArea(restrictedPosition, _this.mediaSize, _this.state.cropSize, _this.getAspect(), _this.props.zoom, _this.props.rotation, _this.props.restrictPosition),
-          croppedAreaPercentages = _a.croppedAreaPercentages,
-          croppedAreaPixels = _a.croppedAreaPixels;
+    _this.emitCropData = function () {
+      var cropData = _this.getCropData();
 
-      _this.props.onCropComplete && _this.props.onCropComplete(croppedAreaPercentages, croppedAreaPixels);
+      if (!cropData) return;
+      var croppedAreaPercentages = cropData.croppedAreaPercentages,
+          croppedAreaPixels = cropData.croppedAreaPixels;
+
+      if (_this.props.onCropComplete) {
+        _this.props.onCropComplete(croppedAreaPercentages, croppedAreaPixels);
+      }
+
+      if (_this.props.onCropAreaChange) {
+        _this.props.onCropAreaChange(croppedAreaPercentages, croppedAreaPixels);
+      }
+    };
+
+    _this.emitCropAreaChange = function () {
+      var cropData = _this.getCropData();
+
+      if (!cropData) return;
+      var croppedAreaPercentages = cropData.croppedAreaPercentages,
+          croppedAreaPixels = cropData.croppedAreaPixels;
+
+      if (_this.props.onCropAreaChange) {
+        _this.props.onCropAreaChange(croppedAreaPercentages, croppedAreaPixels);
+      }
     };
 
     _this.recomputeCropPosition = function () {
@@ -4032,7 +4058,7 @@ function (_super) {
   };
 
   Cropper.prototype.componentDidUpdate = function (prevProps) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
 
     if (prevProps.rotation !== this.props.rotation) {
       this.computeSizes();
@@ -4043,6 +4069,8 @@ function (_super) {
       this.recomputeCropPosition();
     } else if (((_a = prevProps.cropSize) === null || _a === void 0 ? void 0 : _a.height) !== ((_b = this.props.cropSize) === null || _b === void 0 ? void 0 : _b.height) || ((_c = prevProps.cropSize) === null || _c === void 0 ? void 0 : _c.width) !== ((_d = this.props.cropSize) === null || _d === void 0 ? void 0 : _d.width)) {
       this.computeSizes();
+    } else if (((_e = prevProps.crop) === null || _e === void 0 ? void 0 : _e.x) !== ((_f = this.props.crop) === null || _f === void 0 ? void 0 : _f.x) || ((_g = prevProps.crop) === null || _g === void 0 ? void 0 : _g.y) !== ((_h = this.props.crop) === null || _h === void 0 ? void 0 : _h.y)) {
+      this.emitCropAreaChange();
     }
 
     if (prevProps.zoomWithScroll !== this.props.zoomWithScroll && this.containerRef) {
@@ -5785,7 +5813,11 @@ var heading = Object(external_this_wp_element_["createElement"])(external_this_w
 }));
 /* harmony default export */ var library_heading = (heading);
 
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
+var objectWithoutProperties = __webpack_require__(14);
+
 // CONCATENATED MODULE: ./node_modules/@wordpress/block-library/build-module/heading/deprecated.js
+
 
 
 
@@ -5841,7 +5873,57 @@ var deprecated_migrateCustomColors = function migrateCustomColors(attributes) {
   });
 };
 
+var TEXT_ALIGN_OPTIONS = ['left', 'right', 'center'];
+
+var deprecated_migrateTextAlign = function migrateTextAlign(attributes) {
+  var align = attributes.align,
+      rest = Object(objectWithoutProperties["a" /* default */])(attributes, ["align"]);
+
+  return TEXT_ALIGN_OPTIONS.includes(align) ? deprecated_objectSpread(deprecated_objectSpread({}, rest), {}, {
+    textAlign: align
+  }) : attributes;
+};
+
 var heading_deprecated_deprecated = [{
+  supports: {
+    align: ['wide', 'full'],
+    anchor: true,
+    className: false,
+    color: {
+      link: true
+    },
+    fontSize: true,
+    lineHeight: true,
+    __experimentalSelector: {
+      'core/heading/h1': 'h1',
+      'core/heading/h2': 'h2',
+      'core/heading/h3': 'h3',
+      'core/heading/h4': 'h4',
+      'core/heading/h5': 'h5',
+      'core/heading/h6': 'h6'
+    },
+    __unstablePasteTextInline: true
+  },
+  attributes: heading_deprecated_blockAttributes,
+  isEligible: function isEligible(_ref) {
+    var align = _ref.align;
+    return TEXT_ALIGN_OPTIONS.includes(align);
+  },
+  migrate: deprecated_migrateTextAlign,
+  save: function save(_ref2) {
+    var attributes = _ref2.attributes;
+    var align = attributes.align,
+        content = attributes.content,
+        level = attributes.level;
+    var TagName = 'h' + level;
+    var className = classnames_default()(Object(defineProperty["a" /* default */])({}, "has-text-align-".concat(align), align));
+    return Object(external_this_wp_element_["createElement"])(TagName, external_this_wp_blockEditor_["useBlockProps"].save({
+      className: className
+    }), Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["RichText"].Content, {
+      value: content
+    }));
+  }
+}, {
   supports: blockSupports,
   attributes: deprecated_objectSpread(deprecated_objectSpread({}, heading_deprecated_blockAttributes), {}, {
     customTextColor: {
@@ -5851,11 +5933,13 @@ var heading_deprecated_deprecated = [{
       type: 'string'
     }
   }),
-  migrate: deprecated_migrateCustomColors,
-  save: function save(_ref) {
-    var _classnames;
+  migrate: function migrate(attributes) {
+    return deprecated_migrateCustomColors(deprecated_migrateTextAlign(attributes));
+  },
+  save: function save(_ref3) {
+    var _classnames2;
 
-    var attributes = _ref.attributes;
+    var attributes = _ref3.attributes;
     var align = attributes.align,
         content = attributes.content,
         customTextColor = attributes.customTextColor,
@@ -5863,7 +5947,7 @@ var heading_deprecated_deprecated = [{
         textColor = attributes.textColor;
     var tagName = 'h' + level;
     var textClass = Object(external_this_wp_blockEditor_["getColorClassName"])('color', textColor);
-    var className = classnames_default()((_classnames = {}, Object(defineProperty["a" /* default */])(_classnames, textClass, textClass), Object(defineProperty["a" /* default */])(_classnames, 'has-text-color', textColor || customTextColor), Object(defineProperty["a" /* default */])(_classnames, "has-text-align-".concat(align), align), _classnames));
+    var className = classnames_default()((_classnames2 = {}, Object(defineProperty["a" /* default */])(_classnames2, textClass, textClass), Object(defineProperty["a" /* default */])(_classnames2, 'has-text-color', textColor || customTextColor), Object(defineProperty["a" /* default */])(_classnames2, "has-text-align-".concat(align), align), _classnames2));
     return Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["RichText"].Content, {
       className: className ? className : undefined,
       tagName: tagName,
@@ -5882,11 +5966,13 @@ var heading_deprecated_deprecated = [{
       type: 'string'
     }
   }),
-  migrate: deprecated_migrateCustomColors,
-  save: function save(_ref2) {
-    var _classnames2;
+  migrate: function migrate(attributes) {
+    return deprecated_migrateCustomColors(deprecated_migrateTextAlign(attributes));
+  },
+  save: function save(_ref4) {
+    var _classnames3;
 
-    var attributes = _ref2.attributes;
+    var attributes = _ref4.attributes;
     var align = attributes.align,
         content = attributes.content,
         customTextColor = attributes.customTextColor,
@@ -5894,7 +5980,7 @@ var heading_deprecated_deprecated = [{
         textColor = attributes.textColor;
     var tagName = 'h' + level;
     var textClass = Object(external_this_wp_blockEditor_["getColorClassName"])('color', textColor);
-    var className = classnames_default()((_classnames2 = {}, Object(defineProperty["a" /* default */])(_classnames2, textClass, textClass), Object(defineProperty["a" /* default */])(_classnames2, "has-text-align-".concat(align), align), _classnames2));
+    var className = classnames_default()((_classnames3 = {}, Object(defineProperty["a" /* default */])(_classnames3, textClass, textClass), Object(defineProperty["a" /* default */])(_classnames3, "has-text-align-".concat(align), align), _classnames3));
     return Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["RichText"].Content, {
       className: className ? className : undefined,
       tagName: tagName,
@@ -5915,9 +6001,11 @@ var heading_deprecated_deprecated = [{
       type: 'string'
     }
   }),
-  migrate: deprecated_migrateCustomColors,
-  save: function save(_ref3) {
-    var attributes = _ref3.attributes;
+  migrate: function migrate(attributes) {
+    return deprecated_migrateCustomColors(deprecated_migrateTextAlign(attributes));
+  },
+  save: function save(_ref5) {
+    var attributes = _ref5.attributes;
     var align = attributes.align,
         level = attributes.level,
         content = attributes.content,
@@ -6123,13 +6211,13 @@ function HeadingEdit(_ref) {
       mergeBlocks = _ref.mergeBlocks,
       onReplace = _ref.onReplace,
       mergedStyle = _ref.mergedStyle;
-  var align = attributes.align,
+  var textAlign = attributes.textAlign,
       content = attributes.content,
       level = attributes.level,
       placeholder = attributes.placeholder;
   var tagName = 'h' + level;
   var blockProps = Object(external_this_wp_blockEditor_["useBlockProps"])({
-    className: classnames_default()(Object(defineProperty["a" /* default */])({}, "has-text-align-".concat(align), align)),
+    className: classnames_default()(Object(defineProperty["a" /* default */])({}, "has-text-align-".concat(textAlign), textAlign)),
     style: mergedStyle
   });
   return Object(external_this_wp_element_["createElement"])(external_this_wp_element_["Fragment"], null, Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["BlockControls"], null, Object(external_this_wp_element_["createElement"])(external_this_wp_components_["ToolbarGroup"], null, Object(external_this_wp_element_["createElement"])(HeadingLevelDropdown, {
@@ -6140,10 +6228,10 @@ function HeadingEdit(_ref) {
       });
     }
   })), Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["AlignmentToolbar"], {
-    value: align,
+    value: textAlign,
     onChange: function onChange(nextAlign) {
       setAttributes({
-        align: nextAlign
+        textAlign: nextAlign
       });
     }
   })), Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["RichText"], Object(esm_extends["a" /* default */])({
@@ -6170,7 +6258,7 @@ function HeadingEdit(_ref) {
       return onReplace([]);
     },
     placeholder: placeholder || Object(external_this_wp_i18n_["__"])('Write heading…'),
-    textAlign: align
+    textAlign: textAlign
   }, blockProps)));
 }
 
@@ -6191,11 +6279,11 @@ function HeadingEdit(_ref) {
 
 function heading_save_save(_ref) {
   var attributes = _ref.attributes;
-  var align = attributes.align,
+  var textAlign = attributes.textAlign,
       content = attributes.content,
       level = attributes.level;
   var TagName = 'h' + level;
-  var className = classnames_default()(Object(defineProperty["a" /* default */])({}, "has-text-align-".concat(align), align));
+  var className = classnames_default()(Object(defineProperty["a" /* default */])({}, "has-text-align-".concat(textAlign), textAlign));
   return Object(external_this_wp_element_["createElement"])(TagName, external_this_wp_blockEditor_["useBlockProps"].save({
     className: className
   }), Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["RichText"].Content, {
@@ -6232,7 +6320,7 @@ var transforms_apiVersion$name$cate = {
   name: "core/heading",
   category: "text",
   attributes: {
-    align: {
+    textAlign: {
       type: "string"
     },
     content: {
@@ -6370,7 +6458,7 @@ var heading_metadata = {
   name: "core/heading",
   category: "text",
   attributes: {
-    align: {
+    textAlign: {
       type: "string"
     },
     content: {
@@ -6704,9 +6792,6 @@ function quote_save_save(_ref) {
   }));
 }
 
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
-var objectWithoutProperties = __webpack_require__(14);
-
 // EXTERNAL MODULE: external {"this":["wp","richText"]}
 var external_this_wp_richText_ = __webpack_require__(25);
 
@@ -7038,11 +7123,6 @@ var shared_pickRelevantMediaFiles = function pickRelevantMediaFiles(image) {
   return imageProps;
 };
 
-// CONCATENATED MODULE: ./node_modules/@wordpress/block-library/build-module/gallery/constants.js
-var constants_LINK_DESTINATION_NONE = 'none';
-var constants_LINK_DESTINATION_MEDIA = 'file';
-var constants_LINK_DESTINATION_ATTACHMENT = 'post';
-
 // CONCATENATED MODULE: ./node_modules/@wordpress/block-library/build-module/gallery/deprecated.js
 
 
@@ -7066,132 +7146,7 @@ function gallery_deprecated_objectSpread(target) { for (var i = 1; i < arguments
  */
 
 
-
 var gallery_deprecated_deprecated = [{
-  attributes: {
-    images: {
-      type: 'array',
-      default: [],
-      source: 'query',
-      selector: '.blocks-gallery-item',
-      query: {
-        url: {
-          type: 'string',
-          source: 'attribute',
-          selector: 'img',
-          attribute: 'src'
-        },
-        fullUrl: {
-          type: 'string',
-          source: 'attribute',
-          selector: 'img',
-          attribute: 'data-full-url'
-        },
-        link: {
-          type: 'string',
-          source: 'attribute',
-          selector: 'img',
-          attribute: 'data-link'
-        },
-        alt: {
-          type: 'string',
-          source: 'attribute',
-          selector: 'img',
-          attribute: 'alt',
-          default: ''
-        },
-        id: {
-          type: 'string',
-          source: 'attribute',
-          selector: 'img',
-          attribute: 'data-id'
-        },
-        caption: {
-          type: 'string',
-          source: 'html',
-          selector: '.blocks-gallery-item__caption'
-        }
-      }
-    },
-    ids: {
-      type: 'array',
-      items: {
-        type: 'number'
-      },
-      default: []
-    },
-    columns: {
-      type: 'number',
-      minimum: 1,
-      maximum: 8
-    },
-    caption: {
-      type: 'string',
-      source: 'html',
-      selector: '.blocks-gallery-caption'
-    },
-    imageCrop: {
-      type: 'boolean',
-      default: true
-    },
-    linkTo: {
-      type: 'string'
-    },
-    sizeSlug: {
-      type: 'string',
-      default: 'large'
-    }
-  },
-  save: function save(_ref) {
-    var attributes = _ref.attributes;
-    var images = attributes.images,
-        _attributes$columns = attributes.columns,
-        columns = _attributes$columns === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns,
-        imageCrop = attributes.imageCrop,
-        caption = attributes.caption,
-        linkTo = attributes.linkTo;
-    return Object(external_this_wp_element_["createElement"])("figure", {
-      className: "columns-".concat(columns, " ").concat(imageCrop ? 'is-cropped' : '')
-    }, Object(external_this_wp_element_["createElement"])("ul", {
-      className: "blocks-gallery-grid"
-    }, images.map(function (image) {
-      var href;
-
-      switch (linkTo) {
-        case constants_LINK_DESTINATION_MEDIA:
-          href = image.fullUrl || image.url;
-          break;
-
-        case constants_LINK_DESTINATION_ATTACHMENT:
-          href = image.link;
-          break;
-      }
-
-      var img = Object(external_this_wp_element_["createElement"])("img", {
-        src: image.url,
-        alt: image.alt,
-        "data-id": image.id,
-        "data-full-url": image.fullUrl,
-        "data-link": image.link,
-        className: image.id ? "wp-image-".concat(image.id) : null
-      });
-      return Object(external_this_wp_element_["createElement"])("li", {
-        key: image.id || image.url,
-        className: "blocks-gallery-item"
-      }, Object(external_this_wp_element_["createElement"])("figure", null, href ? Object(external_this_wp_element_["createElement"])("a", {
-        href: href
-      }, img) : img, !external_this_wp_blockEditor_["RichText"].isEmpty(image.caption) && Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["RichText"].Content, {
-        tagName: "figcaption",
-        className: "blocks-gallery-item__caption",
-        value: image.caption
-      })));
-    })), !external_this_wp_blockEditor_["RichText"].isEmpty(caption) && Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["RichText"].Content, {
-      tagName: "figcaption",
-      className: "blocks-gallery-caption",
-      value: caption
-    }));
-  }
-}, {
   attributes: {
     images: {
       type: 'array',
@@ -7270,8 +7225,8 @@ var gallery_deprecated_deprecated = [{
   supports: {
     align: true
   },
-  isEligible: function isEligible(_ref2) {
-    var linkTo = _ref2.linkTo;
+  isEligible: function isEligible(_ref) {
+    var linkTo = _ref.linkTo;
     return !linkTo || linkTo === 'attachment' || linkTo === 'media';
   },
   migrate: function migrate(attributes) {
@@ -7289,11 +7244,11 @@ var gallery_deprecated_deprecated = [{
       linkTo: linkTo
     });
   },
-  save: function save(_ref3) {
-    var attributes = _ref3.attributes;
+  save: function save(_ref2) {
+    var attributes = _ref2.attributes;
     var images = attributes.images,
-        _attributes$columns2 = attributes.columns,
-        columns = _attributes$columns2 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns2,
+        _attributes$columns = attributes.columns,
+        columns = _attributes$columns === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns,
         imageCrop = attributes.imageCrop,
         caption = attributes.caption,
         linkTo = attributes.linkTo;
@@ -7403,8 +7358,8 @@ var gallery_deprecated_deprecated = [{
   supports: {
     align: true
   },
-  isEligible: function isEligible(_ref4) {
-    var ids = _ref4.ids;
+  isEligible: function isEligible(_ref3) {
+    var ids = _ref3.ids;
     return ids && ids.some(function (id) {
       return typeof id === 'string';
     });
@@ -7417,11 +7372,11 @@ var gallery_deprecated_deprecated = [{
       })
     });
   },
-  save: function save(_ref5) {
-    var attributes = _ref5.attributes;
+  save: function save(_ref4) {
+    var attributes = _ref4.attributes;
     var images = attributes.images,
-        _attributes$columns3 = attributes.columns,
-        columns = _attributes$columns3 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns3,
+        _attributes$columns2 = attributes.columns,
+        columns = _attributes$columns2 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns2,
         imageCrop = attributes.imageCrop,
         caption = attributes.caption,
         linkTo = attributes.linkTo;
@@ -7526,11 +7481,11 @@ var gallery_deprecated_deprecated = [{
   supports: {
     align: true
   },
-  save: function save(_ref6) {
-    var attributes = _ref6.attributes;
+  save: function save(_ref5) {
+    var attributes = _ref5.attributes;
     var images = attributes.images,
-        _attributes$columns4 = attributes.columns,
-        columns = _attributes$columns4 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns4,
+        _attributes$columns3 = attributes.columns,
+        columns = _attributes$columns3 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns3,
         imageCrop = attributes.imageCrop,
         linkTo = attributes.linkTo;
     return Object(external_this_wp_element_["createElement"])("ul", {
@@ -7615,9 +7570,9 @@ var gallery_deprecated_deprecated = [{
       default: 'none'
     }
   },
-  isEligible: function isEligible(_ref7) {
-    var images = _ref7.images,
-        ids = _ref7.ids;
+  isEligible: function isEligible(_ref6) {
+    var images = _ref6.images,
+        ids = _ref6.ids;
     return images && images.length > 0 && (!ids && images || ids && images && ids.length !== images.length || Object(external_this_lodash_["some"])(images, function (id, index) {
       if (!id && ids[index] !== null) {
         return true;
@@ -7628,8 +7583,8 @@ var gallery_deprecated_deprecated = [{
   },
   migrate: function migrate(attributes) {
     return gallery_deprecated_objectSpread(gallery_deprecated_objectSpread({}, attributes), {}, {
-      ids: Object(external_this_lodash_["map"])(attributes.images, function (_ref8) {
-        var id = _ref8.id;
+      ids: Object(external_this_lodash_["map"])(attributes.images, function (_ref7) {
+        var id = _ref7.id;
 
         if (!id) {
           return null;
@@ -7642,11 +7597,11 @@ var gallery_deprecated_deprecated = [{
   supports: {
     align: true
   },
-  save: function save(_ref9) {
-    var attributes = _ref9.attributes;
+  save: function save(_ref8) {
+    var attributes = _ref8.attributes;
     var images = attributes.images,
-        _attributes$columns5 = attributes.columns,
-        columns = _attributes$columns5 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns5,
+        _attributes$columns4 = attributes.columns,
+        columns = _attributes$columns4 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns4,
         imageCrop = attributes.imageCrop,
         linkTo = attributes.linkTo;
     return Object(external_this_wp_element_["createElement"])("ul", {
@@ -7724,11 +7679,11 @@ var gallery_deprecated_deprecated = [{
   supports: {
     align: true
   },
-  save: function save(_ref10) {
-    var attributes = _ref10.attributes;
+  save: function save(_ref9) {
+    var attributes = _ref9.attributes;
     var images = attributes.images,
-        _attributes$columns6 = attributes.columns,
-        columns = _attributes$columns6 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns6,
+        _attributes$columns5 = attributes.columns,
+        columns = _attributes$columns5 === void 0 ? defaultColumnsNumber(attributes) : _attributes$columns5,
         align = attributes.align,
         imageCrop = attributes.imageCrop,
         linkTo = attributes.linkTo;
@@ -7811,6 +7766,11 @@ var library_edit = __webpack_require__(274);
 
 // EXTERNAL MODULE: ./node_modules/@wordpress/icons/build-module/library/close-small.js
 var close_small = __webpack_require__(159);
+
+// CONCATENATED MODULE: ./node_modules/@wordpress/block-library/build-module/gallery/constants.js
+var constants_LINK_DESTINATION_NONE = 'none';
+var constants_LINK_DESTINATION_MEDIA = 'file';
+var constants_LINK_DESTINATION_ATTACHMENT = 'post';
 
 // CONCATENATED MODULE: ./node_modules/@wordpress/block-library/build-module/gallery/gallery-image.js
 
@@ -8717,7 +8677,7 @@ function gallery_save_save(_ref) {
 
     var img = Object(external_this_wp_element_["createElement"])("img", {
       src: image.url,
-      alt: image.alt !== '' ? image.alt : image.caption,
+      alt: image.alt,
       "data-id": image.id,
       "data-full-url": image.fullUrl,
       "data-link": image.link,
@@ -11576,7 +11536,8 @@ var columns_deprecated_migrateCustomColors = function migrateCustomColors(attrib
  */
 
 var toWidthPrecision = function toWidthPrecision(value) {
-  return Number.isFinite(value) ? parseFloat(value.toFixed(2)) : undefined;
+  var unitlessValue = parseFloat(value);
+  return Number.isFinite(unitlessValue) ? parseFloat(unitlessValue.toFixed(2)) : undefined;
 };
 /**
  * Returns an effective width for a given block. An effective width is equal to
@@ -11657,9 +11618,12 @@ function getRedistributedColumnWidths(blocks, availableWidth) {
  * @return {boolean} Whether columns have explicit widths.
  */
 
-function hasExplicitColumnWidths(blocks) {
+function hasExplicitPercentColumnWidths(blocks) {
   return blocks.every(function (block) {
-    return Number.isFinite(block.attributes.width);
+    var _blockWidth$endsWith;
+
+    var blockWidth = block.attributes.width;
+    return Number.isFinite((blockWidth === null || blockWidth === void 0 ? void 0 : (_blockWidth$endsWith = blockWidth.endsWith) === null || _blockWidth$endsWith === void 0 ? void 0 : _blockWidth$endsWith.call(blockWidth, '%')) ? parseFloat(blockWidth) : blockWidth);
   });
 }
 /**
@@ -11807,7 +11771,7 @@ var ColumnsEditContainerWrapper = Object(external_this_wp_data_["withDispatch"])
           getBlocks = _registry$select2.getBlocks;
 
       var innerBlocks = getBlocks(clientId);
-      var hasExplicitWidths = hasExplicitColumnWidths(innerBlocks); // Redistribute available width for existing inner blocks.
+      var hasExplicitWidths = hasExplicitPercentColumnWidths(innerBlocks); // Redistribute available width for existing inner blocks.
 
       var isAddingColumn = newColumns > previousColumns;
 
@@ -12214,24 +12178,23 @@ var column_deprecated_deprecated = [{
       max: 100
     }
   },
+  isEligible: function isEligible(_ref) {
+    var width = _ref.width;
+    return isFinite(width);
+  },
   migrate: function migrate(attributes) {
     return column_deprecated_objectSpread(column_deprecated_objectSpread({}, attributes), {}, {
       width: "".concat(attributes.width, "%")
     });
   },
-  save: function save(_ref) {
-    var attributes = _ref.attributes;
+  save: function save(_ref2) {
+    var attributes = _ref2.attributes;
     var verticalAlignment = attributes.verticalAlignment,
         width = attributes.width;
     var wrapperClasses = classnames_default()(Object(defineProperty["a" /* default */])({}, "is-vertically-aligned-".concat(verticalAlignment), verticalAlignment));
-    var style;
-
-    if (Number.isFinite(width)) {
-      style = {
-        flexBasis: width + '%'
-      };
-    }
-
+    var style = {
+      flexBasis: width + '%'
+    };
     return Object(external_this_wp_element_["createElement"])("div", {
       className: wrapperClasses,
       style: style
@@ -12294,10 +12257,11 @@ function ColumnEdit(_ref) {
     });
   };
 
+  var widthWithUnit = Number.isFinite(width) ? width + '%' : width;
   var blockProps = Object(external_this_wp_blockEditor_["useBlockProps"])({
     className: classes,
-    style: width ? {
-      flexBasis: width
+    style: widthWithUnit ? {
+      flexBasis: widthWithUnit
     } : undefined
   });
   var innerBlocksProps = Object(external_this_wp_blockEditor_["__experimentalUseInnerBlocksProps"])(blockProps, {
@@ -12367,8 +12331,9 @@ function column_save_save(_ref) {
   var style;
 
   if (width) {
+    // Numbers are handled for backward compatibility as they can be still provided with templates.
     style = {
-      flexBasis: width
+      flexBasis: Number.isFinite(width) ? width + '%' : width
     };
   }
 
@@ -13244,7 +13209,6 @@ function CoverEdit(_ref3) {
     }
   }
 
-  var canDim = !!url && (overlayColor.color || gradientValue);
   var hasBackground = !!(url || overlayColor.color || gradientValue);
   var showFocalPointPicker = isVideoBackground || isImageBackground && (!hasParallax || isRepeated);
   var controls = Object(external_this_wp_element_["createElement"])(external_this_wp_element_["Fragment"], null, Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["BlockControls"], null, hasBackground && Object(external_this_wp_element_["createElement"])(external_this_wp_element_["Fragment"], null, Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["__experimentalBlockAlignmentMatrixToolbar"], {
@@ -13320,7 +13284,7 @@ function CoverEdit(_ref3) {
       onGradientChange: setGradient,
       label: Object(external_this_wp_i18n_["__"])('Color')
     }]
-  }, canDim && Object(external_this_wp_element_["createElement"])(external_this_wp_components_["RangeControl"], {
+  }, !!url && Object(external_this_wp_element_["createElement"])(external_this_wp_components_["RangeControl"], {
     label: Object(external_this_wp_i18n_["__"])('Opacity'),
     value: dimRatio,
     onChange: function onChange(newDimRation) {
@@ -17239,6 +17203,7 @@ function latest_posts_deprecated_objectSpread(target) { for (var i = 1; i < argu
  * Internal dependencies
  */
 var latest_posts_deprecated_metadata = {
+  apiVersion: 2,
   name: "core/latest-posts",
   category: "widgets",
   attributes: {
@@ -17739,7 +17704,14 @@ function LatestPostsEdit(_ref) {
     max: !hasPosts ? MAX_POSTS_COLUMNS : Math.min(MAX_POSTS_COLUMNS, latestPosts.length),
     required: true
   })));
-  var blockProps = Object(external_this_wp_blockEditor_["useBlockProps"])();
+  var blockProps = Object(external_this_wp_blockEditor_["useBlockProps"])({
+    className: classnames_default()(Object(defineProperty["a" /* default */])({
+      'wp-block-latest-posts__list': true,
+      'is-grid': postLayout === 'grid',
+      'has-dates': displayPostDate,
+      'has-author': displayAuthor
+    }, "columns-".concat(columns), postLayout === 'grid'))
+  });
   var hasPosts = Array.isArray(latestPosts) && latestPosts.length;
 
   if (!hasPosts) {
@@ -17773,16 +17745,9 @@ function LatestPostsEdit(_ref) {
 
   var dateFormat = Object(external_this_wp_date_["__experimentalGetSettings"])().formats.date;
 
-  return Object(external_this_wp_element_["createElement"])("div", blockProps, inspectorControls, Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["BlockControls"], null, Object(external_this_wp_element_["createElement"])(external_this_wp_components_["ToolbarGroup"], {
+  return Object(external_this_wp_element_["createElement"])(external_this_wp_element_["Fragment"], null, inspectorControls, Object(external_this_wp_element_["createElement"])(external_this_wp_blockEditor_["BlockControls"], null, Object(external_this_wp_element_["createElement"])(external_this_wp_components_["ToolbarGroup"], {
     controls: layoutControls
-  })), Object(external_this_wp_element_["createElement"])("ul", {
-    className: classnames_default()(Object(defineProperty["a" /* default */])({
-      'wp-block-latest-posts__list': true,
-      'is-grid': postLayout === 'grid',
-      'has-dates': displayPostDate,
-      'has-author': displayAuthor
-    }, "columns-".concat(columns), postLayout === 'grid'))
-  }, displayPosts.map(function (post, i) {
+  })), Object(external_this_wp_element_["createElement"])("ul", blockProps, displayPosts.map(function (post, i) {
     var titleTrimmed = Object(external_this_lodash_["invoke"])(post, ['title', 'rendered', 'trim']);
     var excerpt = post.excerpt.rendered;
     var currentAuthor = authorList.find(function (author) {
@@ -17855,6 +17820,7 @@ function LatestPostsEdit(_ref) {
 
 
 var latest_posts_metadata = {
+  apiVersion: 2,
   name: "core/latest-posts",
   category: "widgets",
   attributes: {

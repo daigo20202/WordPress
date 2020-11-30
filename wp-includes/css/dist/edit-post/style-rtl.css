@@ -192,7 +192,7 @@ html.interface-interface-skeleton__html-container {
 .interface-interface-skeleton__editor {
   display: flex;
   flex-direction: column;
-  flex-grow: 1; }
+  flex: 0 1 100%; }
 
 .interface-interface-skeleton {
   /* Set left position when auto-fold is not on the body element. */
@@ -289,12 +289,15 @@ body.is-fullscreen-mode .interface-interface-skeleton {
   flex-shrink: 0;
   border-top: 1px solid #e0e0e0;
   color: #1e1e1e;
-  position: fixed;
+  position: absolute;
   bottom: 0;
+  right: 0;
   width: 100%;
   background-color: #fff;
   z-index: 90;
   display: none; }
+  .is-focusing-regions .interface-interface-skeleton__footer[role="region"] {
+    position: fixed; }
   @media (min-width: 782px) {
     .interface-interface-skeleton__footer {
       display: flex; } }
@@ -645,6 +648,13 @@ body.is-fullscreen-mode .interface-interface-skeleton {
   padding: 0; }
   .show-icon-labels .edit-post-header-toolbar .edit-post-header-toolbar__left > .edit-post-header-toolbar__inserter-toggle.has-icon {
     height: 36px; }
+
+.edit-post-header-toolbar .edit-post-header-toolbar__left > .edit-post-header-toolbar__inserter-toggle.has-text.has-icon {
+  width: auto;
+  padding: 0 8px; }
+
+.show-icon-labels .edit-post-header-toolbar__left > * + * {
+  margin-right: 8px; }
 
 @media (min-width: 1280px) {
   .show-icon-labels .edit-post-header-toolbar__block-toolbar {
