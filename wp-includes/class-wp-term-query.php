@@ -92,7 +92,7 @@ class WP_Term_Query {
 	 * @param string|array $query {
 	 *     Optional. Array or query string of term query parameters. Default empty.
 	 *
-	 *     @type string|array $taxonomy               Taxonomy name, or array of taxonomies, to which results should
+	 *     @type string|array $taxonomy               Taxonomy name, or array of taxonomy names, to which results should
 	 *                                                be limited.
 	 *     @type int|int[]    $object_ids             Optional. Object ID, or array of object IDs. Results will be
 	 *                                                limited to terms associated with these objects.
@@ -166,8 +166,8 @@ class WP_Term_Query {
 	 *                                                terms are empty. Accepts 'all' or empty (disabled).
 	 *                                                Default empty.
 	 *     @type int          $child_of               Term ID to retrieve child terms of. If multiple taxonomies
-	 *                                                are passed, $child_of is ignored. Default 0.
-	 *     @type int|string   $parent                 Parent term ID to retrieve direct-child terms of.
+	 *                                                are passed, `$child_of` is ignored. Default 0.
+	 *     @type int          $parent                 Parent term ID to retrieve direct-child terms of.
 	 *                                                Default empty.
 	 *     @type bool         $childless              True to limit results to terms that have no children.
 	 *                                                This parameter has no effect on non-hierarchical taxonomies.
