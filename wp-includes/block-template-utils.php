@@ -29,7 +29,12 @@ if ( ! defined( 'WP_TEMPLATE_PART_AREA_UNCATEGORIZED' ) ) {
  *
  * @param string $theme_stylesheet The stylesheet. Default is to leverage the main theme root.
  *
- * @return array Folder names used by block themes.
+ * @return string[] {
+ *     Folder names used by block themes.
+ *
+ *     @type string $wp_template      Theme-relative directory name for block templates.
+ *     @type string $wp_template_part Theme-relative directory name for block template parts.
+ * }
  */
 function get_block_theme_folders( $theme_stylesheet = null ) {
 	$theme_name = null === $theme_stylesheet ? get_stylesheet() : $theme_stylesheet;
@@ -110,55 +115,55 @@ function get_default_block_template_types() {
 	$default_template_types = array(
 		'index'          => array(
 			'title'       => _x( 'Index', 'Template name' ),
-			'description' => __( 'The default template used when no other template is available. This is a required template in WordPress.' ),
+			'description' => __( 'Displays posts.' ),
 		),
 		'home'           => array(
 			'title'       => _x( 'Home', 'Template name' ),
-			'description' => __( 'Template used for the main page that displays blog posts. This is the front page by default in WordPress. If a static front page is set, this is the template used for the page that contains the latest blog posts.' ),
+			'description' => __( 'Displays as the site\'s home page, or as the Posts page when a static home page it set.' ),
 		),
 		'front-page'     => array(
 			'title'       => _x( 'Front Page', 'Template name' ),
-			'description' => __( 'Template used to render the front page of the site, whether it displays blog posts or a static page. The front page template takes precedence over the "Home" template.' ),
+			'description' => __( 'Displays as the site\'s home page.' ),
 		),
 		'singular'       => array(
 			'title'       => _x( 'Singular', 'Template name' ),
-			'description' => __( 'Template used for displaying single views of the content. This template is a fallback for the Single, Post, and Page templates, which take precedence when they exist.' ),
+			'description' => __( 'Displays a single post or page.' ),
 		),
 		'single'         => array(
 			'title'       => _x( 'Single Post', 'Template name' ),
-			'description' => __( 'Template used to display a single blog post.' ),
+			'description' => __( 'Displays a single post.' ),
 		),
 		'page'           => array(
 			'title'       => _x( 'Page', 'Template name' ),
-			'description' => __( 'Template used to display individual pages.' ),
+			'description' => __( 'Displays a single page.' ),
 		),
 		'archive'        => array(
 			'title'       => _x( 'Archive', 'Template name' ),
-			'description' => __( 'The archive template displays multiple entries at once. It is used as a fallback for the Category, Author, and Date templates, which take precedence when they are available.' ),
+			'description' => __( 'Displays post categories, tags, and other archives.' ),
 		),
 		'author'         => array(
 			'title'       => _x( 'Author', 'Template name' ),
-			'description' => __( 'Archive template used to display a list of posts from a single author.' ),
+			'description' => __( 'Displays latest posts written by a single author.' ),
 		),
 		'category'       => array(
 			'title'       => _x( 'Category', 'Template name' ),
-			'description' => __( 'Archive template used to display a list of posts from the same category.' ),
+			'description' => __( 'Displays latest posts in single post category.' ),
 		),
 		'taxonomy'       => array(
 			'title'       => _x( 'Taxonomy', 'Template name' ),
-			'description' => __( 'Archive template used to display a list of posts from the same taxonomy.' ),
+			'description' => __( 'Displays latest posts from a single post taxonomy.' ),
 		),
 		'date'           => array(
 			'title'       => _x( 'Date', 'Template name' ),
-			'description' => __( 'Archive template used to display a list of posts from a specific date.' ),
+			'description' => __( 'Displays posts from a specific date.' ),
 		),
 		'tag'            => array(
 			'title'       => _x( 'Tag', 'Template name' ),
-			'description' => __( 'Archive template used to display a list of posts with a given tag.' ),
+			'description' => __( 'Displays latest posts with single post tag.' ),
 		),
 		'attachment'     => array(
 			'title'       => __( 'Media' ),
-			'description' => __( 'Template used to display individual media items or attachments.' ),
+			'description' => __( 'Displays individual media items or attachments.' ),
 		),
 		'search'         => array(
 			'title'       => _x( 'Search', 'Template name' ),
@@ -166,11 +171,11 @@ function get_default_block_template_types() {
 		),
 		'privacy-policy' => array(
 			'title'       => __( 'Privacy Policy' ),
-			'description' => '',
+			'description' => __( 'Displays the privacy policy page.' ),
 		),
 		'404'            => array(
 			'title'       => _x( '404', 'Template name' ),
-			'description' => __( 'Template shown when no content is found.' ),
+			'description' => __( 'Displays when no content is found.' ),
 		),
 	);
 
@@ -223,7 +228,7 @@ function _filter_block_template_part_area( $type ) {
  * @access private
  *
  * @param string $base_directory The theme's file path.
- * @return array $path_list A list of paths to all template part files.
+ * @return array A list of paths to all template part files.
  */
 function _get_block_templates_paths( $base_directory ) {
 	$path_list = array();
