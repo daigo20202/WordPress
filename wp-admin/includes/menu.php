@@ -187,9 +187,13 @@ foreach ( $menu as $id => $data ) {
 unset( $id, $data, $subs, $first_sub );
 
 /**
- * @param string $class_to_add
- * @param string $classes
- * @return string
+ * Adds a CSS class to a string.
+ *
+ * @since 2.7.0
+ *
+ * @param string $class_to_add The CSS class to add.
+ * @param string $classes      The string to add the CSS class to.
+ * @return string The string with the CSS class added.
  */
 function add_cssclass( $class_to_add, $classes ) {
 	if ( empty( $classes ) ) {
@@ -200,46 +204,53 @@ function add_cssclass( $class_to_add, $classes ) {
 }
 
 /**
- * @param array $menu
- * @return array
+ * Adds CSS classes for top-level administration menu items.
+ *
+ * The list of added classes includes `.menu-top-first` and `.menu-top-last`.
+ *
+ * @since 2.7.0
+ *
+ * @param array $menu The array of administration menu items.
+ * @return array The array of administration menu items with the CSS classes added.
  */
 function add_menu_classes( $menu ) {
-	$first     = false;
-	$lastorder = false;
-	$i         = 0;
-	$mc        = count( $menu );
+	$first_item  = false;
+	$last_order  = false;
+	$items_count = count( $menu );
+	$i           = 0;
+
 	foreach ( $menu as $order => $top ) {
 		$i++;
 
 		if ( 0 == $order ) { // Dashboard is always shown/single.
 			$menu[0][4] = add_cssclass( 'menu-top-first', $top[4] );
-			$lastorder  = 0;
+			$last_order = 0;
 			continue;
 		}
 
-		if ( 0 === strpos( $top[2], 'separator' ) && false !== $lastorder ) { // If separator.
-			$first                 = true;
-			$c                     = $menu[ $lastorder ][4];
-			$menu[ $lastorder ][4] = add_cssclass( 'menu-top-last', $c );
+		if ( 0 === strpos( $top[2], 'separator' ) && false !== $last_order ) { // If separator.
+			$first_item             = true;
+			$classes                = $menu[ $last_order ][4];
+			$menu[ $last_order ][4] = add_cssclass( 'menu-top-last', $classes );
 			continue;
 		}
 
-		if ( $first ) {
-			$c                 = $menu[ $order ][4];
-			$menu[ $order ][4] = add_cssclass( 'menu-top-first', $c );
-			$first             = false;
+		if ( $first_item ) {
+			$classes           = $menu[ $order ][4];
+			$menu[ $order ][4] = add_cssclass( 'menu-top-first', $classes );
+			$first_item        = false;
 		}
 
-		if ( $mc == $i ) { // Last item.
-			$c                 = $menu[ $order ][4];
-			$menu[ $order ][4] = add_cssclass( 'menu-top-last', $c );
+		if ( $i == $items_count ) { // Last item.
+			$classes           = $menu[ $order ][4];
+			$menu[ $order ][4] = add_cssclass( 'menu-top-last', $classes );
 		}
 
-		$lastorder = $order;
+		$last_order = $order;
 	}
 
 	/**
-	 * Filters administration menus array with classes added for top-level items.
+	 * Filters administration menu array with classes added for top-level items.
 	 *
 	 * @since 2.7.0
 	 *
@@ -354,4 +365,3 @@ if ( ! user_can_access_admin_page() ) {
 }
 
 $menu = add_menu_classes( $menu );
-                		
