@@ -3049,7 +3049,7 @@ class WP_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * This internal function performs the 'in caption' insertion mode
 	 * logic for the generalized WP_HTML_Processor::step() function.
 	 *
-	 * @since 6.7.0 Stub implementation.
+	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
@@ -3059,7 +3059,72 @@ class WP_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * @return bool Whether an element was found.
 	 */
 	private function step_in_caption(): bool {
-		$this->bail( 'No support for parsing in the ' . WP_HTML_Processor_State::INSERTION_MODE_IN_CAPTION . ' state.' );
+		$tag_name = $this->get_tag();
+		$op_sigil = $this->is_tag_closer() ? '-' : '+';
+		$op       = "{$op_sigil}{$tag_name}";
+
+		switch ( $op ) {
+			/*
+			 * > An end tag whose tag name is "caption"
+			 * > A start tag whose tag name is one of: "caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"
+			 * > An end tag whose tag name is "table"
+			 *
+			 * These tag handling rules are identical except for the final instruction.
+			 * Handle them in a single block.
+			 */
+			case '-CAPTION':
+			case '+CAPTION':
+			case '+COL':
+			case '+COLGROUP':
+			case '+TBODY':
+			case '+TD':
+			case '+TFOOT':
+			case '+TH':
+			case '+THEAD':
+			case '+TR':
+			case '-TABLE':
+				if ( ! $this->state->stack_of_open_elements->has_element_in_table_scope( 'CAPTION' ) ) {
+					// Parse error: ignore the token.
+					return $this->step();
+				}
+
+				$this->generate_implied_end_tags();
+				if ( ! $this->state->stack_of_open_elements->current_node_is( 'CAPTION' ) ) {
+					// @todo Indicate a parse error once it's possible.
+				}
+
+				$this->state->stack_of_open_elements->pop_until( 'CAPTION' );
+				$this->state->active_formatting_elements->clear_up_to_last_marker();
+				$this->state->insertion_mode = WP_HTML_Processor_State::INSERTION_MODE_IN_TABLE;
+
+				// If this is not a CAPTION end tag, the token should be reprocessed.
+				if ( '-CAPTION' === $op ) {
+					return true;
+				}
+				return $this->step( self::REPROCESS_CURRENT_NODE );
+
+			/**
+			 * > An end tag whose tag name is one of: "body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"
+			 */
+			case '-BODY':
+			case '-COL':
+			case '-COLGROUP':
+			case '-HTML':
+			case '-TBODY':
+			case '-TD':
+			case '-TFOOT':
+			case '-TH':
+			case '-THEAD':
+			case '-TR':
+				// Parse error: ignore the token.
+				return $this->step();
+		}
+
+		/**
+		 * > Anything else
+		 * >   Process the token using the rules for the "in body" insertion mode.
+		 */
+		return $this->step_in_body();
 	}
 
 	/**
@@ -3706,7 +3771,7 @@ class WP_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * This internal function performs the 'in select in table' insertion mode
 	 * logic for the generalized WP_HTML_Processor::step() function.
 	 *
-	 * @since 6.7.0 Stub implementation.
+	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
@@ -3716,7 +3781,52 @@ class WP_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * @return bool Whether an element was found.
 	 */
 	private function step_in_select_in_table(): bool {
-		$this->bail( 'No support for parsing in the ' . WP_HTML_Processor_State::INSERTION_MODE_IN_SELECT_IN_TABLE . ' state.' );
+		$token_name = $this->get_token_name();
+		$token_type = $this->get_token_type();
+		$op_sigil   = '#tag' === $token_type ? ( parent::is_tag_closer() ? '-' : '+' ) : '';
+		$op         = "{$op_sigil}{$token_name}";
+
+		switch ( $op ) {
+			/*
+			 * > A start tag whose tag name is one of: "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"
+			 */
+			case '+CAPTION':
+			case '+TABLE':
+			case '+TBODY':
+			case '+TFOOT':
+			case '+THEAD':
+			case '+TR':
+			case '+TD':
+			case '+TH':
+				// @todo Indicate a parse error once it's possible.
+				$this->state->stack_of_open_elements->pop_until( 'SELECT' );
+				$this->reset_insertion_mode();
+				return $this->step( self::REPROCESS_CURRENT_NODE );
+
+			/*
+			 * > An end tag whose tag name is one of: "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"
+			 */
+			case '-CAPTION':
+			case '-TABLE':
+			case '-TBODY':
+			case '-TFOOT':
+			case '-THEAD':
+			case '-TR':
+			case '-TD':
+			case '-TH':
+				// @todo Indicate a parse error once it's possible.
+				if ( ! $this->state->stack_of_open_elements->has_element_in_table_scope( $token_name ) ) {
+					return $this->step();
+				}
+				$this->state->stack_of_open_elements->pop_until( 'SELECT' );
+				$this->reset_insertion_mode();
+				return $this->step( self::REPROCESS_CURRENT_NODE );
+		}
+
+		/*
+		 * > Anything else
+		 */
+		return $this->step_in_select();
 	}
 
 	/**
